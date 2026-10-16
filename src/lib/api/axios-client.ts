@@ -6,7 +6,7 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL
 /**
  * Public Axios instance:
  * Used for endpoints that do NOT require authentication
- * (e.g., send-otp, verify-otp, public resources)
+ * (e.g., login, public resources)
  */
 export const publicApi = axios.create({
   baseURL: BASE_URL,

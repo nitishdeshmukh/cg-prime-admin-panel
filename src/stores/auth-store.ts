@@ -3,7 +3,6 @@ import { getCookie, setCookie, removeCookie } from '@/lib/cookies'
 
 const ACCESS_TOKEN = 'thisisjustarandomstring'
 const REFRESH_TOKEN = 'refresh_token'
-const OTP_PHONE = 'otp_phone_number'
 
 export interface AuthUser {
   id?: number
@@ -32,8 +31,6 @@ interface AuthState {
     setTokens: (accessToken: string, refreshToken?: string) => void
     resetAccessToken: () => void
     reset: () => void
-    phoneForOtp: string
-    setPhoneForOtp: (phone: string) => void
   }
 }
 
@@ -64,7 +61,6 @@ function getStoredUser(): AuthUser | null {
 export const useAuthStore = create<AuthState>()((set) => {
   const initAccessToken = safeParseToken(getCookie(ACCESS_TOKEN))
   const initRefreshToken = safeParseToken(getCookie(REFRESH_TOKEN))
-  const initOtpPhone = getCookie(OTP_PHONE) || ''
   const initUser = getStoredUser()
 
   return {
@@ -118,21 +114,10 @@ export const useAuthStore = create<AuthState>()((set) => {
           removeCookie(ACCESS_TOKEN)
           return { ...state, auth: { ...state.auth, accessToken: '' } }
         }),
-      phoneForOtp: initOtpPhone,
-      setPhoneForOtp: (phone) =>
-        set((state) => {
-          if (phone) {
-            setCookie(OTP_PHONE, phone, 60 * 10) // 10 minutes validity
-          } else {
-            removeCookie(OTP_PHONE)
-          }
-          return { ...state, auth: { ...state.auth, phoneForOtp: phone } }
-        }),
       reset: () =>
         set((state) => {
           removeCookie(ACCESS_TOKEN)
           removeCookie(REFRESH_TOKEN)
-          removeCookie(OTP_PHONE)
           try {
             localStorage.removeItem(USER_DATA)
           } catch {
@@ -145,7 +130,6 @@ export const useAuthStore = create<AuthState>()((set) => {
               user: null,
               accessToken: '',
               refreshToken: '',
-              phoneForOtp: '',
             },
           }
         }),

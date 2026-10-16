@@ -3,7 +3,7 @@ import {
   LayoutDashboard,
   Monitor,
   Bug,
-  ListTodo,
+  Video,
   FileX,
   HelpCircle,
   Lock,
@@ -21,6 +21,7 @@ import {
   AudioWaveform,
   Command,
   GalleryVerticalEnd,
+  ListTodo,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -57,6 +58,11 @@ export const sidebarData: SidebarData = {
           icon: LayoutDashboard,
         },
         {
+          title: 'Creators',
+          url: '/creators',
+          icon: Video,
+        },
+        {
           title: 'Tasks',
           url: '/tasks',
           icon: ListTodo,
@@ -91,16 +97,8 @@ export const sidebarData: SidebarData = {
               url: '/sign-in',
             },
             {
-              title: 'Sign Up',
-              url: '/sign-up',
-            },
-            {
               title: 'Forgot Password',
               url: '/forgot-password',
-            },
-            {
-              title: 'OTP',
-              url: '/otp',
             },
           ],
         },
