@@ -1,23 +1,9 @@
-import { ConfirmDialog } from '@/components/confirm-dialog'
 import { CreatorMutateDrawer } from './creator-mutate-drawer'
+import { CreatorsDeleteDialog } from './creators-delete-dialog'
 import { useCreatorsContext } from './creators-provider'
-import { useDeleteCreator } from '../api/use-creators'
 
 export function CreatorsDialogs() {
   const { open, setOpen, currentRow, setCurrentRow } = useCreatorsContext()
-  const deleteMutation = useDeleteCreator()
-
-  const handleDeleteConfirm = () => {
-    if (!currentRow?.id) return
-    deleteMutation.mutate(currentRow.id, {
-      onSuccess: () => {
-        setOpen(null)
-        setTimeout(() => {
-          setCurrentRow(null)
-        }, 500)
-      },
-    })
-  }
 
   return (
     <>
@@ -70,9 +56,8 @@ export function CreatorsDialogs() {
 
       {/* Delete Creator Confirmation Dialog */}
       {currentRow && (
-        <ConfirmDialog
+        <CreatorsDeleteDialog
           key={`creator-delete-${currentRow.id}`}
-          destructive
           open={open === 'delete'}
           onOpenChange={(isOpen) => {
             if (!isOpen) {
@@ -82,19 +67,7 @@ export function CreatorsDialogs() {
               }, 500)
             }
           }}
-          isLoading={deleteMutation.isPending}
-          handleConfirm={handleDeleteConfirm}
-          className='max-w-md'
-          title={`Delete Creator #${currentRow.id}?`}
-          desc={
-            <>
-              Are you sure you want to delete creator{' '}
-              <strong>{currentRow.name || `#${currentRow.id}`}</strong> ({currentRow.phoneNumber})?
-              <br />
-              This action cannot be undone.
-            </>
-          }
-          confirmText='Delete'
+          currentRow={currentRow}
         />
       )}
     </>

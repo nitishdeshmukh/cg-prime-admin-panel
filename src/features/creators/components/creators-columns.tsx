@@ -93,6 +93,14 @@ export const creatorsColumns: ColumnDef<Creator>[] = [
         'inset-s-6 ps-0.5 max-md:sticky @4xl/content:table-cell @4xl/content:drop-shadow-none'
       ),
     },
+    filterFn: (row, _id, value) => {
+      if (!value) return true
+      const search = String(value).toLowerCase()
+      const creator = row.original
+      const name = creator.name?.toLowerCase() || ''
+      const phone = creator.phoneNumber?.toLowerCase() || ''
+      return name.includes(search) || phone.includes(search)
+    },
     enableSorting: false,
   },
   {
@@ -147,12 +155,13 @@ export const creatorsColumns: ColumnDef<Creator>[] = [
     enableSorting: false,
   },
   {
-    accessorKey: 'onboardingCompleted',
+    id: 'onboardingCompleted',
+    accessorFn: (row) => (row.onboardingCompleted ? 'completed' : 'pending'),
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title='Onboarding' />
     ),
     cell: ({ row }) => {
-      const isCompleted = row.getValue('onboardingCompleted') as boolean
+      const isCompleted = row.getValue('onboardingCompleted') === 'completed'
       return isCompleted ? (
         <Badge
           variant='outline'
@@ -169,15 +178,19 @@ export const creatorsColumns: ColumnDef<Creator>[] = [
         </Badge>
       )
     },
+    filterFn: (row, id, value: string[]) => {
+      return value.includes(row.getValue(id))
+    },
     enableSorting: false,
   },
   {
-    accessorKey: 'enabled',
+    id: 'enabled',
+    accessorFn: (row) => (row.enabled ? 'active' : 'disabled'),
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title='Status' />
     ),
     cell: ({ row }) => {
-      const isEnabled = row.getValue('enabled') as boolean
+      const isEnabled = row.getValue('enabled') === 'active'
       return isEnabled ? (
         <Badge
           variant='default'
@@ -191,6 +204,9 @@ export const creatorsColumns: ColumnDef<Creator>[] = [
           Disabled
         </Badge>
       )
+    },
+    filterFn: (row, id, value: string[]) => {
+      return value.includes(row.getValue(id))
     },
     enableSorting: false,
   },

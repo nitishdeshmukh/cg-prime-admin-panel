@@ -63,6 +63,11 @@ export const sidebarData: SidebarData = {
           icon: Video,
         },
         {
+          title: 'Users',
+          url: '/users',
+          icon: Users,
+        },
+        {
           title: 'Tasks',
           url: '/tasks',
           icon: ListTodo,
@@ -79,10 +84,10 @@ export const sidebarData: SidebarData = {
           icon: MessagesSquare,
         },
         {
-          title: 'Users',
-          url: '/users',
-          icon: Users,
-        }
+          title: 'User Copy',
+          url: '/users-copy',
+          icon: UserCog,
+        },
       ],
     },
     {

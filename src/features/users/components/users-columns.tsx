@@ -1,14 +1,15 @@
 import { type ColumnDef } from '@tanstack/react-table'
-import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DataTableColumnHeader } from '@/components/data-table'
 import { LongText } from '@/components/long-text'
-import { callTypes, roles } from '../data/data'
-import { type User } from '../data/schema'
+import { format } from 'date-fns'
+import type { AppUser } from '../api/types'
+import { cn } from '@/lib/utils'
 import { DataTableRowActions } from './data-table-row-actions'
 
-export const usersColumns: ColumnDef<User>[] = [
+export const usersColumns: ColumnDef<AppUser>[] = [
   {
     id: 'select',
     header: ({ table }) => (
@@ -37,102 +38,182 @@ export const usersColumns: ColumnDef<User>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: 'username',
+    accessorKey: 'id',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Username' />
+      <DataTableColumnHeader column={column} title='ID' />
     ),
     cell: ({ row }) => (
-      <LongText className='max-w-36 ps-3'>{row.getValue('username')}</LongText>
+      <div className='ps-2.5 text-sm'>
+        {row.getValue('id')}
+      </div>
     ),
+    enableSorting: true,
+  },
+  {
+    id: 'name',
+    accessorKey: 'name',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='User' />
+    ),
+    cell: ({ row }) => {
+      const user = row.original
+      const name = user.name
+      const initials = name
+        ? name
+          .split(' ')
+          .map((n) => n[0])
+          .join('')
+          .toUpperCase()
+          .slice(0, 2)
+        : 'US'
+
+      return (
+        <div className='flex items-center gap-3 min-w-44'>
+          <Avatar className='h-9 w-9 border'>
+            <AvatarImage
+              src={user.profilePicLink || ''}
+              alt={name || 'User'}
+            />
+            <AvatarFallback className='text-xs font-semibold'>
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <div className='flex flex-col'>
+            <LongText className='text-sm max-w-40'>
+              {name || 'Unnamed User'}
+            </LongText>
+          </div>
+        </div>
+      )
+    },
     meta: {
       className: cn(
         'drop-shadow-[0_1px_2px_rgb(0_0_0_/_0.1)] dark:drop-shadow-[0_1px_2px_rgb(255_255_255_/_0.1)]',
         'inset-s-6 ps-0.5 max-md:sticky @4xl/content:table-cell @4xl/content:drop-shadow-none'
       ),
     },
-    enableHiding: false,
-  },
-  {
-    id: 'fullName',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Name' />
-    ),
-    cell: ({ row }) => {
-      const { firstName, lastName } = row.original
-      const fullName = `${firstName} ${lastName}`
-      return <LongText className='max-w-36'>{fullName}</LongText>
+    filterFn: (row, _id, value) => {
+      if (!value) return true
+      const search = String(value).toLowerCase()
+      const user = row.original
+      const name = user.name?.toLowerCase() || ''
+      const phone = user.phoneNumber?.toLowerCase() || ''
+      return name.includes(search) || phone.includes(search)
     },
-    meta: { className: 'w-36' },
-  },
-  {
-    accessorKey: 'email',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Email' />
-    ),
-    cell: ({ row }) => (
-      <div className='w-fit ps-2 text-nowrap'>{row.getValue('email')}</div>
-    ),
+    enableSorting: false,
   },
   {
     accessorKey: 'phoneNumber',
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title='Phone Number' />
     ),
-    cell: ({ row }) => <div>{row.getValue('phoneNumber')}</div>,
+    cell: ({ row }) => (
+      <span className='text-sm'>{row.getValue('phoneNumber')}</span>
+    ),
     enableSorting: false,
   },
   {
-    accessorKey: 'status',
+    accessorKey: 'badge',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Status' />
+      <DataTableColumnHeader column={column} title='Badge' />
     ),
     cell: ({ row }) => {
-      const { status } = row.original
-      const badgeColor = callTypes.get(status)
-      return (
-        <div className='flex space-x-2'>
-          <Badge variant='outline' className={cn('capitalize', badgeColor)}>
-            {row.getValue('status')}
-          </Badge>
-        </div>
-      )
-    },
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id))
-    },
-    enableHiding: false,
-    enableSorting: false,
-  },
-  {
-    accessorKey: 'role',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Role' />
-    ),
-    cell: ({ row }) => {
-      const { role } = row.original
-      const userType = roles.find(({ value }) => value === role)
+      const badge = row.getValue('badge') as string | null
 
-      if (!userType) {
-        return null
+      if (!badge) {
+        return <span className='text-xs text-muted-foreground'>None</span>
       }
 
+      const formatted = badge.replace(/_/g, ' ')
+      const isMonthlyActive = badge === 'MONTHLY_ACTIVE'
+
       return (
-        <div className='flex items-center gap-x-2'>
-          {userType.icon && (
-            <userType.icon size={16} className='text-muted-foreground' />
+        <Badge
+          variant='outline'
+          className={cn(
+            'capitalize text-xs font-medium',
+            isMonthlyActive
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800'
+              : 'bg-primary/10 text-primary border-primary/20'
           )}
-          <span className='text-sm capitalize'>{row.getValue('role')}</span>
-        </div>
+        >
+          {formatted.toLowerCase()}
+        </Badge>
       )
     },
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id))
     },
     enableSorting: false,
-    enableHiding: false,
+  },
+  {
+    id: 'city',
+    accessorFn: (row) => row.city?.trim() || '',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='City' />
+    ),
+    cell: ({ row }) => (
+      <span className='text-sm'>{row.getValue('city') || '—'}</span>
+    ),
+    filterFn: (row, id, value: string[]) => {
+      return value.includes(row.getValue(id))
+    },
+    enableSorting: false,
+  },
+  {
+    id: 'state',
+    accessorFn: (row) => row.state?.trim() || '',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='State' />
+    ),
+    cell: ({ row }) => (
+      <span className='text-sm'>{row.getValue('state') || '—'}</span>
+    ),
+    filterFn: (row, id, value: string[]) => {
+      return value.includes(row.getValue(id))
+    },
+    enableSorting: false,
+  },
+  {
+    id: 'country',
+    accessorFn: (row) => row.country?.trim() || '',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Country' />
+    ),
+    cell: ({ row }) => (
+      <span className='text-sm'>{row.getValue('country') || '—'}</span>
+    ),
+    filterFn: (row, id, value: string[]) => {
+      return value.includes(row.getValue(id))
+    },
+    enableSorting: false,
+  },
+  {
+    accessorKey: 'lastUsedAt',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Last Active' />
+    ),
+    cell: ({ row }) => {
+      const lastUsedAt = row.getValue('lastUsedAt') as string | null
+      if (!lastUsedAt) {
+        return <span className='text-sm'>Never</span>
+      }
+
+      try {
+        return (
+          <span className='text-sm'>
+            {format(new Date(lastUsedAt), 'MMM dd, yyyy HH:mm')}
+          </span>
+        )
+      } catch {
+        return <span className='text-xs font-mono'>{lastUsedAt}</span>
+      }
+    },
+    enableSorting: true,
   },
   {
     id: 'actions',
     cell: DataTableRowActions,
-  },
+  }
+
 ]

@@ -1,16 +1,17 @@
-import { UsersActionDialog } from './users-action-dialog'
 import { UsersDeleteDialog } from './users-delete-dialog'
 import { UsersInviteDialog } from './users-invite-dialog'
+import { UsersMutateDrawer } from './users-mutate-drawer'
 import { useUsers } from './users-provider'
 
 export function UsersDialogs() {
   const { open, setOpen, currentRow, setCurrentRow } = useUsers()
   return (
     <>
-      <UsersActionDialog
+      <UsersMutateDrawer
         key='user-add'
         open={open === 'add'}
         onOpenChange={() => setOpen('add')}
+        mode='create'
       />
 
       <UsersInviteDialog
@@ -21,7 +22,7 @@ export function UsersDialogs() {
 
       {currentRow && (
         <>
-          <UsersActionDialog
+          <UsersMutateDrawer
             key={`user-edit-${currentRow.id}`}
             open={open === 'edit'}
             onOpenChange={() => {
@@ -31,6 +32,20 @@ export function UsersDialogs() {
               }, 500)
             }}
             currentRow={currentRow}
+            mode='update'
+          />
+
+          <UsersMutateDrawer
+            key={`user-view-${currentRow.id}`}
+            open={open === 'view'}
+            onOpenChange={() => {
+              setOpen('view')
+              setTimeout(() => {
+                setCurrentRow(null)
+              }, 500)
+            }}
+            currentRow={currentRow}
+            mode='view'
           />
 
           <UsersDeleteDialog

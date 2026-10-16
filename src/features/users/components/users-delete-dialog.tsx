@@ -2,17 +2,17 @@
 
 import { useState } from 'react'
 import { AlertTriangle } from 'lucide-react'
-import { showSubmittedData } from '@/lib/show-submitted-data'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ConfirmDialog } from '@/components/confirm-dialog'
-import { type User } from '../data/schema'
+import type { AppUser } from '../api/types'
+import { useDeleteUser } from '../api/use-users'
 
 type UserDeleteDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  currentRow: User
+  currentRow: AppUser
 }
 
 export function UsersDeleteDialog({
@@ -21,12 +21,19 @@ export function UsersDeleteDialog({
   currentRow,
 }: UserDeleteDialogProps) {
   const [value, setValue] = useState('')
+  const deleteMutation = useDeleteUser()
+
+  const confirmKeyword = currentRow.phoneNumber || currentRow.name || String(currentRow.id)
+  const isMatch = value.trim().toLowerCase() === confirmKeyword.toLowerCase()
 
   const handleDelete = () => {
-    if (value.trim() !== currentRow.username) return
+    if (!isMatch) return
 
-    onOpenChange(false)
-    showSubmittedData(currentRow, 'The following user has been deleted:')
+    deleteMutation.mutate(currentRow.id, {
+      onSuccess: () => {
+        onOpenChange(false)
+      },
+    })
   }
 
   return (
@@ -34,7 +41,8 @@ export function UsersDeleteDialog({
       open={open}
       onOpenChange={onOpenChange}
       form='users-delete-form'
-      disabled={value.trim() !== currentRow.username}
+      disabled={!isMatch}
+      isLoading={deleteMutation.isPending}
       title={
         <span className='text-destructive'>
           <AlertTriangle
@@ -54,30 +62,29 @@ export function UsersDeleteDialog({
           className='space-y-4'
         >
           <p className='mb-2'>
-            Are you sure you want to delete{' '}
-            <span className='font-bold'>{currentRow.username}</span>?
-            <br />
-            This action will permanently remove the user with the role of{' '}
+            Are you sure you want to delete user{' '}
             <span className='font-bold'>
-              {currentRow.role.toUpperCase()}
-            </span>{' '}
-            from the system. This cannot be undone.
+              {currentRow.name || currentRow.phoneNumber}
+            </span>
+            ?
+            <br />
+            This action will permanently remove this user record (ID: {currentRow.id}) from the system. This cannot be undone.
           </p>
 
           <Label className='my-2'>
-            Username:
-            <Input
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              placeholder='Enter username to confirm deletion.'
-              autoFocus
-            />
+            Confirmation:
           </Label>
+          <Input
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder={`Enter "${confirmKeyword}" to confirm.`}
+            autoFocus
+          />
 
           <Alert variant='destructive'>
             <AlertTitle>Warning!</AlertTitle>
             <AlertDescription>
-              Please be careful, this operation can not be rolled back.
+              Please be careful, this operation cannot be rolled back.
             </AlertDescription>
           </Alert>
         </form>
